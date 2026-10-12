@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FTMO Risk Calculator</title>
+  <meta name="description" content="Risk-first position sizing for FTMO BTCUSD / ETHUSD">
+  <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FTMO Risk">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preload" href="fonts/changa-arabic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="fonts/changa.css">
+  <link rel="stylesheet" href="src/ui/app.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div>
+        <h1 data-i18n="appTitle"></h1>
+        <p class="sub" data-i18n="appSub"></p>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="langBtn" type="button" aria-label="Language">EN</button>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="col">
+        <!-- Trade -->
+        <div class="card">
+          <h2 class="card-title" data-i18n="trade"></h2>
+          <div class="sym-row">
+            <div class="seg sym" role="radiogroup" id="symQuick" data-field="symbol"></div>
+            <button type="button" class="sym-all" id="symAllBtn"><span data-i18n="allSymbols"></span></button>
+          </div>
+          <p class="spec ltr-mix" id="specLine"></p>
+          <div class="seg dir" role="radiogroup" data-field="direction">
+            <button type="button" role="radio" data-value="long" class="long" data-i18n="long"></button>
+            <button type="button" role="radio" data-value="short" class="short" data-i18n="short"></button>
+          </div>
+          <div class="fields three">
+            <label class="field"><span data-i18n="entry"></span><input id="entry" inputmode="decimal" autocomplete="off" dir="ltr" enterkeyhint="next"></label>
+            <label class="field"><span data-i18n="sl"></span><input id="sl" inputmode="decimal" autocomplete="off" dir="ltr" enterkeyhint="next"></label>
+            <label class="field"><span data-i18n="tp"></span><input id="tp" inputmode="decimal" autocomplete="off" dir="ltr" enterkeyhint="next"></label>
+          </div>
+          <p class="hint" id="slDist" dir="auto"></p>
+          <div class="fields two rates" id="ratesBox"></div>
+        </div>
+
+        <!-- Account -->
+        <div class="card">
+          <h2 class="card-title" data-i18n="account"></h2>
+          <div class="fields two">
+            <label class="field"><span data-i18n="balance"></span><input id="balance" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+            <label class="field"><span data-i18n="equity"></span><input id="equity" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+          </div>
+          <div class="risk-row">
+            <label class="field"><span data-i18n="riskPct"></span><input id="riskPct" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+            <div class="chips" id="riskChips">
+              <button type="button" data-risk="0.5" class="ltr">0.5%</button>
+              <button type="button" data-risk="1" class="ltr">1%</button>
+              <button type="button" data-risk="1.5" class="ltr">1.5%</button>
+              <button type="button" data-risk="2" class="ltr">2%</button>
+            </div>
+          </div>
+          <details class="more" id="moreOpts">
+            <summary data-i18n="more"></summary>
+            <div class="fields two">
+              <label class="field"><span data-i18n="initial"></span><input id="initial" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+              <label class="field"><span data-i18n="existingMargin"></span><input id="existingMargin" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="0"></label>
+              <label class="field"><span data-i18n="desiredExposure"></span><input id="desiredExposurePct" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+              <label class="field"><span data-i18n="slippage"></span><input id="slippage" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="0"></label>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="col">
+        <!-- Result -->
+        <div class="card hero" id="hero" aria-live="polite">
+          <div class="hero-head">
+            <span class="eyebrow" data-i18n="recommended"></span>
+            <span class="pill" id="statusPill"></span>
+          </div>
+          <div id="heroBody">
+            <div class="lot-line"><span class="lot ltr" id="lotVal">—</span><span class="lot-unit" data-i18n="lot"></span></div>
+            <div class="qty ltr" id="qtyVal"></div>
+            <div class="kpis">
+              <div><span data-i18n="exposure"></span><b class="ltr" id="kExposure">—</b></div>
+              <div><span data-i18n="risk"></span><b class="ltr" id="kRisk">—</b></div>
+              <div><span data-i18n="margin"></span><b class="ltr" id="kMargin">—</b></div>
+            </div>
+          </div>
+          <ul class="msgs" id="msgs"></ul>
+        </div>
+
+        <div class="card" id="resultsCard">
+          <h2 class="card-title" data-i18n="summary"></h2>
+          <dl class="rows" id="summaryRows"></dl>
+          <h3 class="mini-title" data-i18n="usage"></h3>
+          <div class="meters" id="meters"></div>
+          <h3 class="mini-title" data-i18n="whyLimited"></h3>
+          <dl class="rows limits" id="limitRows"></dl>
+          <p class="note" id="estNote"></p>
+        </div>
+
+        <div class="card" id="fixedCard">
+          <h2 class="card-title" data-i18n="fixedTitle"></h2>
+          <p class="sub" data-i18n="fixedSub"></p>
+          <dl class="rows" id="fixedRows"></dl>
+          <p class="fixed-warn" id="fixedWarn"></p>
+        </div>
+
+        <details class="card fold" id="ftmoCard">
+          <summary><h2 class="card-title" data-i18n="ftmoSafety"></h2><span class="pill sm" id="ftmoPill"></span></summary>
+          <div class="fields two">
+            <label class="field"><span data-i18n="dailyStart"></span><input id="dailyStart" inputmode="decimal" autocomplete="off" dir="ltr"></label>
+            <label class="field"><span data-i18n="openPL"></span><input id="openPL" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="0"></label>
+            <label class="field"><span data-i18n="commissions"></span><input id="commissions" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="0"></label>
+            <label class="field"><span data-i18n="swaps"></span><input id="swaps" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="0"></label>
+          </div>
+          <dl class="rows" id="ftmoRows"></dl>
+          <p class="hint" id="ftmoMsg"></p>
+        </details>
+
+        <details class="card fold">
+          <summary><h2 class="card-title" data-i18n="rules"></h2></summary>
+          <dl class="rows" id="rulesRows"></dl>
+          <p class="note" data-i18n="rulesNote"></p>
+        </details>
+
+        <div class="card days">
+          <div>
+            <h2 class="card-title" data-i18n="tradingDays"></h2>
+            <div class="days-count ltr" id="daysCount">0 / 4</div>
+          </div>
+          <div class="days-actions">
+            <button type="button" class="btn" id="dayReset" data-i18n="reset"></button>
+            <button type="button" class="btn primary" id="dayMark" data-i18n="markDay"></button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot"><span id="offline"></span> · v1.0</footer>
+  </div>
+
+  <!-- Sticky compact result for small screens -->
+  <div class="dock" id="dock" aria-hidden="true">
+    <span class="dock-lot ltr" id="dockLot">—</span>
+    <span class="dock-meta ltr" id="dockMeta"></span>
+    <span class="pill sm" id="dockPill"></span>
+  </div>
+
+  <dialog id="settingsDlg">
+    <form method="dialog" class="sheet">
+      <div class="sheet-head">
+        <h2 data-i18n="settings"></h2>
+        <button class="btn primary" value="close" data-i18n="close"></button>
+      </div>
+      <div class="sheet-body" id="settingsBody"></div>
+      <button type="button" class="btn ghost" id="resetSettings" data-i18n="resetDefaults"></button>
+    </form>
+  </dialog>
+
+  <dialog id="symbolDlg">
+    <div class="sheet">
+      <div class="sheet-head">
+        <input id="symSearch" class="search" type="search" autocomplete="off" dir="ltr" spellcheck="false">
+        <button type="button" class="btn primary" id="symClose" data-i18n="close"></button>
+      </div>
+      <div class="chips classes" id="symClasses"></div>
+      <ul class="sym-list" id="symList"></ul>
+      <p class="note" id="symUpdated"></p>
+    </div>
+  </dialog>
+
+  <script type="module" src="src/ui/app.js"></script>
+</body>
+</html>

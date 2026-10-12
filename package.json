@@ -1,0 +1,11 @@
+{
+  "name": "ftmo-risk-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile-first FTMO BTC/ETH risk & exposure calculator (PWA, offline, no backend)",
+  "scripts": {
+    "test": "node --test tests/",
+    "start": "python3 -m http.server 5173"
+  }
+}
